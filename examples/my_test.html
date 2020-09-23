@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>three.js webgl - arraycamera</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<link type="text/css" rel="stylesheet" href="main.css">
+	<style>
+		div {
+			display: grid;
+			height: 100%;  
+			width: 100%;  
+			position: absolute;  
+			top: 0px;  
+			bottom: 0px;  
+		}
+		
+		.container {
+			display: grid;
+			grid-template-columns: 30% 30% 30%;
+			grid-template-rows: 50% 50%;
+			grid-template-areas: 
+				"a b c"
+				"d e f";
+		}
+		.a {
+			grid-area: a;
+			background-color:aliceblue;
+		}
+
+		.b {
+			grid-area: b;
+			background-color:aqua;
+		}
+
+		.c {
+			grid-area: c;
+			background-color:blue;
+		}
+
+		.d {
+			grid-area: d;
+			background-color: brown;
+		}
+
+		.e {
+			grid-area: e;
+			background-color: red;
+		}
+
+		.f {
+			grid-area: f;
+			background-color: yellow; 
+		}
+	</style>
+
+</head>
+
+<body>
+	<div class='container'>
+		<div class='a'></div>
+		<div class='b'></div>
+		<div class='c'></div>
+		<div class='d'></div>
+		<div class='e'></div>
+		<div class='f'></div>
+	</div>
+	<script type="module">
+
+		import * as THREE from '../build/three.module.js';
+		import { PLYLoader } from './jsm/loaders/PLYLoader.js';
+		var mesh;
+		var AMOUNT = 2;
+		var filelist = [];
+		var scenes = [];
+		var cameras = [];
+		var renderers = [];
+		var plylist = ['ply/est.ply','ply/est.ply','ply/est.ply','ply/est.ply','ply/est.ply','ply/est.ply']
+		var loader = new PLYLoader();
+		init();
+		animate();
+		
+		function init() {
+			var ASPECT_RATIO = window.innerWidth / window.innerHeight;
+			var HEIGHT_DIV = parseInt(window.getComputedStyle(document.body.getElementsByClassName("a")[0]).getPropertyValue('height'),10)
+			var WIDTH_DIV = parseInt(window.getComputedStyle(document.body.getElementsByClassName("a")[0]).getPropertyValue('width'),10)
+			var WIDTH = (WIDTH_DIV / AMOUNT) * window.devicePixelRatio ;
+			var HEIGHT = (HEIGHT_DIV/ AMOUNT) * window.devicePixelRatio;
+			console.log(WIDTH,HEIGHT)
+			for(var i =0;i<6;i++)
+			{
+				var subcamera = new THREE.PerspectiveCamera(40, ASPECT_RATIO, 0.1, 10);
+				subcamera.viewport = new THREE.Vector4(0 ,0 ,Math.ceil(WIDTH), Math.ceil(HEIGHT));
+				subcamera.position.x = 0
+				subcamera.position.y = 0
+				subcamera.position.z = 1.5;
+				subcamera.position.multiplyScalar(2);
+				subcamera.lookAt(0, 0, 0);
+				subcamera.updateMatrixWorld();
+				cameras.push(subcamera);
+				var scene = new THREE.Scene();
+				scene.add(new THREE.AmbientLight(0x222244));
+				var light = new THREE.DirectionalLight();
+				light.position.set(0.5, 0.5, 1);
+				light.castShadow = true;
+				light.shadow.camera.zoom = 4; // tighter shadow map
+				scene.add(light);
+				
+				loader.load(plylist[i], function (geo) {
+					  var material = new THREE.PointCloudMaterial({ size: 0.001, vertexColors: THREE.VertexColors });
+					  var points = new THREE.PointCloud(geo, material);
+					  points.scale.multiplyScalar(0.001);
+					  scene.add(points);
+					});
+					
+				var geometry = new THREE.PlaneBufferGeometry(100, 100);
+				var material = new THREE.MeshPhongMaterial({ color: 0x000066 });
+				var background = new THREE.Mesh(geometry, material);
+				background.receiveShadow = true;
+				background.position.set(0, 0, - 1);
+				scene.add(background);
+				scenes.push(scene);
+				var renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(WIDTH,HEIGHT);
+				renderer.shadowMap.enabled = true;
+				renderers.push(renderer);	
+				document.body.getElementsByClassName(String.fromCharCode(97+i))[0].appendChild(renderer.domElement);
+			}
+			window.addEventListener('resize', onWindowResize, false);
+		}
+
+		function onWindowResize() {
+
+			var ASPECT_RATIO = window.innerWidth / window.innerHeight;
+			
+			var HEIGHT_DIV = parseInt(window.getComputedStyle(document.body.getElementsByClassName("a")[0]).getPropertyValue('height'),10)
+			var WIDTH_DIV = parseInt(window.getComputedStyle(document.body.getElementsByClassName("a")[0]).getPropertyValue('width'),10)
+			var WIDTH = (WIDTH_DIV / AMOUNT) * window.devicePixelRatio ;
+			var HEIGHT = (HEIGHT_DIV/ AMOUNT) * window.devicePixelRatio;
+			camera.aspect = ASPECT_RATIO;
+			camera.updateProjectionMatrix();
+
+			for (var i = 0; i < 6; i++) {
+				var subcamera = cameras[i];
+				subcamera.viewport.set(
+					Math.floor(x * WIDTH),
+					Math.floor(y * HEIGHT),
+					Math.ceil(WIDTH),
+					Math.ceil(HEIGHT));
+				subcamera.aspect = ASPECT_RATIO;
+				subcamera.updateProjectionMatrix();
+				renderers[i].setSize(WIDTH,HEIGHT);
+			}
+		}
+
+		function animate() {
+
+
+			for (var i = 0; i < 6; i++) {
+				renderers[i].render(scenes[i], cameras[i]);
+			}
+			requestAnimationFrame(animate);
+
+		}
+
+	</script>
+
+</body>
+
+</html>

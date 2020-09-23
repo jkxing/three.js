@@ -1,5 +1,6 @@
 var files = {
 	"webgl": [
+		"my_test",
 		"webgl_animation_cloth",
 		"webgl_animation_keyframes",
 		"webgl_animation_skinning_blending",

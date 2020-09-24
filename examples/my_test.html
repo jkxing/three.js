@@ -70,34 +70,34 @@
 
 		import * as THREE from '../build/three.module.js';
 		import { PLYLoader } from './jsm/loaders/PLYLoader.js';
+    	import { FirstPersonControls } from "./jsm/controls/FirstPersonControls.js";
+    	import { OrbitControls } from "./jsm/controls/OrbitControls.js";
 		var mesh;
-		var AMOUNT = 2;
+		var AMOUNT = 1;
 		var filelist = [];
 		var scenes = [];
 		var cameras = [];
 		var renderers = [];
+		var controls = [];
 		var plylist = ['ply/est.ply','ply/est.ply','ply/est.ply','ply/est.ply','ply/est.ply','ply/est.ply']
 		var loader = new PLYLoader();
+		var clocks = [];
+		var cnt = 0;
 		init();
-		animate();
-		
+		//animate();
+		render();
 		function init() {
 			var ASPECT_RATIO = window.innerWidth / window.innerHeight;
 			var HEIGHT_DIV = parseInt(window.getComputedStyle(document.body.getElementsByClassName("a")[0]).getPropertyValue('height'),10)
 			var WIDTH_DIV = parseInt(window.getComputedStyle(document.body.getElementsByClassName("a")[0]).getPropertyValue('width'),10)
-			var WIDTH = (WIDTH_DIV / AMOUNT) * window.devicePixelRatio ;
-			var HEIGHT = (HEIGHT_DIV/ AMOUNT) * window.devicePixelRatio;
+			var WIDTH = (WIDTH_DIV / AMOUNT) ;
+			var HEIGHT = (HEIGHT_DIV/ AMOUNT) ;
 			console.log(WIDTH,HEIGHT)
-			for(var i =0;i<6;i++)
+			for(var i=0;i<6;i++)
 			{
-				var subcamera = new THREE.PerspectiveCamera(40, ASPECT_RATIO, 0.1, 10);
-				subcamera.viewport = new THREE.Vector4(0 ,0 ,Math.ceil(WIDTH), Math.ceil(HEIGHT));
-				subcamera.position.x = 0
-				subcamera.position.y = 0
-				subcamera.position.z = 1.5;
-				subcamera.position.multiplyScalar(2);
-				subcamera.lookAt(0, 0, 0);
-				subcamera.updateMatrixWorld();
+				clocks.push(new THREE.Clock());
+				var subcamera = new THREE.PerspectiveCamera(90, ASPECT_RATIO, 0.1, 10);
+            	subcamera.position.set(1,0,0);
 				cameras.push(subcamera);
 				var scene = new THREE.Scene();
 				scene.add(new THREE.AmbientLight(0x222244));
@@ -106,14 +106,6 @@
 				light.castShadow = true;
 				light.shadow.camera.zoom = 4; // tighter shadow map
 				scene.add(light);
-				
-				loader.load(plylist[i], function (geo) {
-					  var material = new THREE.PointCloudMaterial({ size: 0.001, vertexColors: THREE.VertexColors });
-					  var points = new THREE.PointCloud(geo, material);
-					  points.scale.multiplyScalar(0.001);
-					  scene.add(points);
-					});
-					
 				var geometry = new THREE.PlaneBufferGeometry(100, 100);
 				var material = new THREE.MeshPhongMaterial({ color: 0x000066 });
 				var background = new THREE.Mesh(geometry, material);
@@ -121,12 +113,24 @@
 				background.position.set(0, 0, - 1);
 				scene.add(background);
 				scenes.push(scene);
+				loader.load(plylist[i], function (geo) {
+					  var material = new THREE.PointCloudMaterial({ size: 0.001, vertexColors: THREE.VertexColors });
+					  var points = new THREE.PointCloud(geo, material);
+					  points.scale.multiplyScalar(0.001);
+					  scenes[cnt].add(points);
+					  cnt++;
+					});
+					
 				var renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio(window.devicePixelRatio);
 				renderer.setSize(WIDTH,HEIGHT);
 				renderer.shadowMap.enabled = true;
 				renderers.push(renderer);	
 				document.body.getElementsByClassName(String.fromCharCode(97+i))[0].appendChild(renderer.domElement);
+				var control = new OrbitControls(subcamera, renderer.domElement);
+				control.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
+				control.enabled = true;
+				controls.push(control);
 			}
 			window.addEventListener('resize', onWindowResize, false);
 		}
@@ -137,16 +141,16 @@
 			
 			var HEIGHT_DIV = parseInt(window.getComputedStyle(document.body.getElementsByClassName("a")[0]).getPropertyValue('height'),10)
 			var WIDTH_DIV = parseInt(window.getComputedStyle(document.body.getElementsByClassName("a")[0]).getPropertyValue('width'),10)
-			var WIDTH = (WIDTH_DIV / AMOUNT) * window.devicePixelRatio ;
-			var HEIGHT = (HEIGHT_DIV/ AMOUNT) * window.devicePixelRatio;
-			camera.aspect = ASPECT_RATIO;
-			camera.updateProjectionMatrix();
+			var WIDTH = (WIDTH_DIV / AMOUNT);
+			var HEIGHT = (HEIGHT_DIV/ AMOUNT);
+			//camera.aspect = ASPECT_RATIO;
+			//camera.updateProjectionMatrix();
 
 			for (var i = 0; i < 6; i++) {
 				var subcamera = cameras[i];
 				subcamera.viewport.set(
-					Math.floor(x * WIDTH),
-					Math.floor(y * HEIGHT),
+					Math.floor(0),
+					Math.floor(0),
 					Math.ceil(WIDTH),
 					Math.ceil(HEIGHT));
 				subcamera.aspect = ASPECT_RATIO;
@@ -156,13 +160,17 @@
 		}
 
 		function animate() {
+			console.log(cameras[0].position);
+			render();
+			requestAnimationFrame(animate);
 
+		}
 
+		function render(){
+			console.log("render");
 			for (var i = 0; i < 6; i++) {
 				renderers[i].render(scenes[i], cameras[i]);
 			}
-			requestAnimationFrame(animate);
-
 		}
 
 	</script>

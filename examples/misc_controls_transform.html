@@ -20,6 +20,8 @@
 			import * as THREE from '../build/three.module.js';
 
 			import { OrbitControls } from './jsm/controls/OrbitControls.js';
+			import { FirstPersonControls } from './jsm/controls/FirstPersonControls.js';
+			import { OrbitControls } from './jsm/controls/OrbitControls.js';
 			import { TransformControls } from './jsm/controls/TransformControls.js';
 
 			var cameraPersp, cameraOrtho, currentCamera;
@@ -57,7 +59,7 @@
 				var geometry = new THREE.BoxBufferGeometry( 200, 200, 200 );
 				var material = new THREE.MeshLambertMaterial( { map: texture, transparent: true } );
 
-				orbit = new OrbitControls( currentCamera, renderer.domElement );
+				orbit = new FirstPersonControls( currentCamera, renderer.domElement );
 				orbit.update();
 				orbit.addEventListener( 'change', render );
 
@@ -194,7 +196,7 @@
 			}
 
 			function render() {
-
+				console.log("rendering");
 				renderer.render( scene, currentCamera );
 
 			}

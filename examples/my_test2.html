@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>three.js webgl - arraycamera</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="main.css">
+    <style>
+        div {
+            display: grid;
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0px;
+            bottom: 0px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 30% 30% 30%;
+            grid-template-rows: 50% 50%;
+            grid-template-areas:
+                "a b c"
+                "d e f";
+        }
+
+        .a {
+            grid-area: a;
+            background-color: aliceblue;
+        }
+
+        .b {
+            grid-area: b;
+            background-color: aqua;
+        }
+
+        .c {
+            grid-area: c;
+            background-color: blue;
+        }
+
+        .d {
+            grid-area: d;
+            background-color: brown;
+        }
+
+        .e {
+            grid-area: e;
+            background-color: red;
+        }
+
+        .f {
+            grid-area: f;
+            background-color: yellow;
+        }
+    </style>
+
+</head>
+
+<body>
+    <script type="module">
+
+        import * as THREE from '../build/three.module.js';
+        import { PLYLoader } from './jsm/loaders/PLYLoader.js';
+        import { FirstPersonControls } from "./jsm/controls/FirstPersonControls.js";
+        import { OrbitControls } from "./jsm/controls/OrbitControls.js";
+        var mesh;
+        var AMOUNT = 1;
+        var filelist = [];
+        var scenes = [];
+        var cameras = [];
+        var subcamera,scene,renderer,control;
+        var renderers = [];
+        var controls = [];
+        var plylist = ['ply/est.ply', 'ply/est.ply', 'ply/est.ply', 'ply/est.ply', 'ply/est.ply', 'ply/est.ply']
+        var loader = new PLYLoader();
+        var clocks = [];
+        var cnt = 0;
+        init();
+        //animate();
+        render();
+        function init() {
+            var ASPECT_RATIO = window.innerWidth / window.innerHeight;
+            var WIDTH = window.innerWidth;
+            var HEIGHT = window.innerWidth;
+            subcamera = new THREE.PerspectiveCamera(90, ASPECT_RATIO, 0.1, 10);
+            subcamera.position.set(400,200,0);
+            cameras.push(subcamera);
+            scene = new THREE.Scene();
+            scenes.push(scene);
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(WIDTH, HEIGHT);
+            renderer.shadowMap.enabled = true;
+            renderers.push(renderer);
+            document.body.appendChild(renderer.domElement);
+            control = new OrbitControls(subcamera, renderer.domElement);
+            control.addEventListener('change', render); // call this only in static scenes (i.e., if there is no animation loop)
+            control.enabled = true;
+            controls.push(control);
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function onWindowResize() {
+
+            var ASPECT_RATIO = window.innerWidth / window.innerHeight;
+
+            var WIDTH = window.innerWidth;
+            var HEIGHT = window.innerWidth;
+            console.log(WIDTH, HEIGHT)
+            //camera.aspect = ASPECT_RATIO;
+            //camera.updateProjectionMatrix();
+
+            for (var i = 0; i < AMOUNT; i++) {
+                var subcamera = cameras[i];
+                subcamera.viewport.set(
+                    Math.floor(0),
+                    Math.floor(0),
+                    Math.ceil(WIDTH),
+                    Math.ceil(HEIGHT));
+                subcamera.aspect = ASPECT_RATIO;
+                subcamera.updateProjectionMatrix();
+                renderers[i].setSize(WIDTH, HEIGHT);
+            }
+        }
+
+        function animate() {
+            console.log(cameras[0].position);
+            render();
+            requestAnimationFrame(animate);
+
+        }
+
+        function render() {
+            console.log("render");
+            for (var i = 0; i < AMOUNT; i++) {
+                renderers[i].render(scenes[i], cameras[i]);
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
